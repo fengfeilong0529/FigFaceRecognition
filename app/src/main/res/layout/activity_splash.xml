@@ -19,6 +19,6 @@
         android:drawablePadding="20dp"
         android:textColor="#000"
         android:textStyle="italic|bold"
-        android:textSize="34sp"/>
+        android:textSize="30sp"/>
 
 </android.support.constraint.ConstraintLayout>

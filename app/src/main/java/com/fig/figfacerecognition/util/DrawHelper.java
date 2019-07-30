@@ -41,8 +41,8 @@ public class DrawHelper {
                       boolean isMirror, boolean mirrorHorizontal, boolean mirrorVertical) {
         this.previewWidth = previewWidth;
         this.previewHeight = previewHeight;
-        this.canvasWidth = canvasWidth;
-        this.canvasHeight = canvasHeight;
+        this.canvasWidth = canvasWidth;//0
+        this.canvasHeight = canvasHeight;//0
         this.cameraDisplayOrientation = cameraDisplayOrientation;
         this.cameraId = cameraId;
         this.isMirror = isMirror;

@@ -6,4 +6,9 @@
     <string name="init_failed">引擎初始化失败，错误码为 %d</string>
     <string name="engine_not_initialized">引擎未初始化，错误码为 %d</string>
     <string name="compare_failed">比对失败，错误码为 %d</string>
+    <string name="no_face_need_to_delete">无人脸需要删除</string>
+    <string name="notification">提示</string>
+    <string name="confirm_delete">确认删除这%d张图片及人脸特征？</string>
+    <string name="ok">确认</string>
+    <string name="cancel">取消</string>
 </resources>

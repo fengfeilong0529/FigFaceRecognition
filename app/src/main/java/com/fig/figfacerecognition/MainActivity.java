@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.arcsoft.face.ActiveFileInfo;
@@ -75,13 +76,18 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
             Manifest.permission.READ_PHONE_STATE
 
     };
-    private static final String PWD = "";
+    /**
+     * 管理密码
+     */
+    private static final String ADMIN_PWD = "";
     @BindView(R.id.texture_preview)
     TextureView previewView;
     @BindView(R.id.face_rect_view)
     FaceRectView faceRectView;
     @BindView(R.id.view_manager)
     View mViewManager;
+    @BindView(R.id.tvFaceNum)
+    TextView mTvFaceNum;
     private AlertDialog mDialog = null;
     private FaceEngine faceEngine;
     private CameraHelper cameraHelper;
@@ -98,13 +104,16 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     /**
      * 活体检测的开关
      */
-    private boolean livenessDetect = true;
+    private boolean livenessDetect = false;
     /**
      * 优先打开的摄像头，本界面主要用于单目RGB摄像头设备，因此默认打开前置
      */
     private Integer rgbCameraID = Camera.CameraInfo.CAMERA_FACING_FRONT;
+    /**
+     * 识别阈值
+     */
     private static final float SIMILAR_THRESHOLD = 0.8F;
-    private Camera.Size previewSize;
+    public static Camera.Size previewSize;
     private DrawHelper drawHelper;
 
     @Override
@@ -123,9 +132,9 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
 
         // Activity启动后就锁定为启动时的方向
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+        initData();
         //本地人脸库初始化
         FaceServer.getInstance().init(this);
-        initData();
     }
 
     private void initData() {
@@ -139,6 +148,8 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         previewView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         initEngine();
         initCamera();
+        int faceNum = FaceServer.getInstance().getFaceNumber(this);
+        mTvFaceNum.setText("人脸数：" + faceNum);
     }
 
     /**
@@ -164,6 +175,8 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                     public void onNext(Integer activeCode) {
                         if (activeCode == ErrorInfo.MOK) {
                             ToastUtil.showToastShort(MainActivity.this, getString(R.string.active_success));
+                            //本地人脸库初始化
+                            FaceServer.getInstance().init(MainActivity.this);
                         } else if (activeCode == ErrorInfo.MERR_ASF_ALREADY_ACTIVATED) {
                             ToastUtil.showToastShort(MainActivity.this, getString(R.string.already_activated));
                         } else {
@@ -280,7 +293,6 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                         .build();
             }
 
-
             @Override
             public void onPreview(final byte[] nv21, Camera camera) {
                 if (faceRectView != null) {
@@ -304,7 +316,6 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                                 || requestFeatureStatusMap.get(facePreviewInfoList.get(i).getTrackId()) == RequestFeatureStatus.FAILED) {
                             requestFeatureStatusMap.put(facePreviewInfoList.get(i).getTrackId(), RequestFeatureStatus.SEARCHING);
                             faceHelper.requestFaceFeature(nv21, facePreviewInfoList.get(i).getFaceInfo(), previewSize.width, previewSize.height, FaceEngine.CP_PAF_NV21, facePreviewInfoList.get(i).getTrackId());
-//                            Log.i(TAG, "onPreview: fr start = " + System.currentTimeMillis() + " trackId = " + facePreviewInfoList.get(i).getTrackId());
                         }
                     }
                 }
@@ -378,44 +389,21 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
 
                     @Override
                     public void onNext(CompareResult compareResult) {
-//                        if (compareResult == null || compareResult.getUserName() == null) {
-//                            requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
-//                            faceHelper.addName(requestId, "VISITOR " + requestId);
-//                            return;
-//                        }
-//
-////                        Log.i(TAG, "onNext: fr search get result  = " + System.currentTimeMillis() + " trackId = " + requestId + "  similar = " + compareResult.getSimilar());
-//                        if (compareResult.getSimilar() > SIMILAR_THRESHOLD) {
-//                            boolean isAdded = false;
-//                            if (compareResultList == null) {
-//                                requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
-//                                faceHelper.addName(requestId, "VISITOR " + requestId);
-//                                return;
-//                            }
-//                            for (CompareResult compareResult1 : compareResultList) {
-//                                if (compareResult1.getTrackId() == requestId) {
-//                                    isAdded = true;
-//                                    break;
-//                                }
-//                            }
-//                            if (!isAdded) {
-//                                //对于多人脸搜索，假如最大显示数量为 MAX_DETECT_NUM 且有新的人脸进入，则以队列的形式移除
-//                                if (compareResultList.size() >= MAX_DETECT_NUM) {
-//                                    compareResultList.remove(0);
-//                                    adapter.notifyItemRemoved(0);
-//                                }
-//                                //添加显示人员时，保存其trackId
-//                                compareResult.setTrackId(requestId);
-//                                compareResultList.add(compareResult);
-//                                adapter.notifyItemInserted(compareResultList.size() - 1);
-//                            }
-//                            requestFeatureStatusMap.put(requestId, RequestFeatureStatus.SUCCEED);
-//                            faceHelper.addName(requestId, compareResult.getUserName());
-//
-//                        } else {
-//                            requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
-//                            faceHelper.addName(requestId, "VISITOR " + requestId);
-//                        }
+                        Log.i(TAG, "onNext: 识别结果：" + (compareResult == null));
+                        if (compareResult == null || compareResult.getUserName() == null) {
+                            requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
+                            faceHelper.addName(requestId, "VISITOR " + requestId);
+                            return;
+                        }
+
+                        if (compareResult.getSimilar() > SIMILAR_THRESHOLD) {
+                            ToastUtil.showToastShort(MainActivity.this, "识别成功\n" + compareResult.getUserName());
+                            requestFeatureStatusMap.put(requestId, RequestFeatureStatus.SUCCEED);
+                            faceHelper.addName(requestId, compareResult.getUserName());
+                        } else {
+                            requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
+                            faceHelper.addName(requestId, "VISITOR " + requestId);
+                        }
                     }
 
                     @Override
@@ -448,7 +436,7 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             String pwd = etPlayerName.getText().toString().trim();
-                            if (TextUtils.equals(pwd, PWD)) {
+                            if (TextUtils.equals(pwd, ADMIN_PWD)) {
                                 startActivity(new Intent(MainActivity.this, SettingActivity.class));
                             } else {
                                 ToastUtil.showToastShort(MainActivity.this, "密码错误！");
@@ -460,6 +448,20 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         } else if (!mDialog.isShowing()) {
             mDialog.show();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (cameraHelper != null) {
+            cameraHelper.start();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        cameraHelper.stop();
     }
 
     @Override

@@ -114,11 +114,13 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        boolean isBackCamera = getIntent().getBooleanExtra("isBackCamera", false);
+        rgbCameraID = isBackCamera ? Camera.CameraInfo.CAMERA_FACING_BACK : Camera.CameraInfo.CAMERA_FACING_FRONT;
         //保持亮屏
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WindowManager.LayoutParams attributes = getWindow().getAttributes();
-            attributes.systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+            attributes.systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY/* | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION*/;
             getWindow().setAttributes(attributes);
         }
 

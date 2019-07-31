@@ -12,6 +12,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 import com.arcsoft.face.ActiveFileInfo;
 import com.arcsoft.face.ErrorInfo;
@@ -19,8 +20,11 @@ import com.arcsoft.face.FaceEngine;
 import com.fig.figfacerecognition.MainActivity;
 import com.fig.figfacerecognition.R;
 import com.fig.figfacerecognition.common.Constants;
+import com.fig.figfacerecognition.util.MultiClickListener;
 import com.fig.figfacerecognition.util.ToastUtil;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -32,6 +36,9 @@ import io.reactivex.schedulers.Schedulers;
 public class SplashActivity extends Activity {
     private static final String TAG = "SplashActivity";
 
+    @BindView(R.id.tv_slogan)
+    TextView mTvSlogan;
+
     private static final int CAMERA_PERMISSION_CODE = 10;
     String[] NEED_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -40,18 +47,34 @@ public class SplashActivity extends Activity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
     };
     private FaceEngine faceEngine = new FaceEngine();
+    /**
+     * 是否默认开启后置摄像头
+     */
+    private boolean mBackCamera;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_splash);
+        ButterKnife.bind(this);
+        initView();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkCameraPermission();
         } else {
             initTimer();
         }
         activeEngine();
+    }
+
+    private void initView() {
+        mTvSlogan.setOnClickListener(new MultiClickListener(2) {
+            @Override
+            protected void clickOverMaxCount() {
+                ToastUtil.showToastShort(SplashActivity.this, "切换成功");
+                mBackCamera = true;
+            }
+        });
     }
 
     private void initTimer() {
@@ -64,7 +87,9 @@ public class SplashActivity extends Activity {
     }
 
     private void toMainActivity() {
-        startActivity(new Intent(SplashActivity.this, MainActivity.class));
+        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+        intent.putExtra("isBackCamera", mBackCamera);
+        startActivity(intent);
         finish();
     }
 

@@ -16,7 +16,7 @@ import com.fig.figfacerecognition.widget.FaceRectView;
 import java.util.List;
 
 /**
- * 绘制人脸框帮助类，用于在{@link com.arcsoft.arcfacedemo.widget.FaceRectView}上绘制矩形
+ * 绘制人脸框帮助类，用于在{@link FaceRectView}上绘制矩形
  */
 public class DrawHelper {
     private int previewWidth, previewHeight, canvasWidth, canvasHeight, cameraDisplayOrientation, cameraId;
@@ -194,7 +194,7 @@ public class DrawHelper {
             paint.setColor(color);
         }
         Path mPath = new Path();
-        //左上
+//        //左上
         Rect rect = drawInfo.getRect();
         mPath.moveTo(rect.left, rect.top + rect.height() / 4);
         mPath.lineTo(rect.left, rect.top);
@@ -213,6 +213,7 @@ public class DrawHelper {
         mPath.lineTo(rect.left, rect.bottom - rect.height() / 4);
         canvas.drawPath(mPath, paint);
 
+//        canvas.drawRect(rect,paint);
 
         if (drawInfo.getName() == null) {
             paint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -223,11 +224,11 @@ public class DrawHelper {
                     + (drawInfo.getAge() == AgeInfo.UNKNOWN_AGE ? "UNKNWON" : drawInfo.getAge())
                     + ","
                     + (drawInfo.getLiveness() == LivenessInfo.ALIVE ? "ALIVE" : (drawInfo.getLiveness() == LivenessInfo.NOT_ALIVE ? "NOT_ALIVE" : "UNKNOWN"));
-            canvas.drawText(str, rect.left, rect.top - 10, paint);
+            canvas.drawText(str, rect.left, rect.top - 20, paint);
         } else {
             paint.setStyle(Paint.Style.FILL_AND_STROKE);
             paint.setTextSize(rect.width() / 8);
-            canvas.drawText(drawInfo.getName(), rect.left, rect.top - 10, paint);
+            canvas.drawText(drawInfo.getName(), rect.left, rect.top - 20, paint);
         }
     }
 

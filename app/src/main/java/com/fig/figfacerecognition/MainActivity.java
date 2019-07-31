@@ -1,6 +1,5 @@
 package com.fig.figfacerecognition;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,7 +22,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.arcsoft.face.ActiveFileInfo;
 import com.arcsoft.face.AgeInfo;
 import com.arcsoft.face.ErrorInfo;
 import com.arcsoft.face.FaceEngine;
@@ -32,7 +30,6 @@ import com.arcsoft.face.GenderInfo;
 import com.arcsoft.face.LivenessInfo;
 import com.arcsoft.face.VersionInfo;
 import com.fig.figfacerecognition.activity.SettingActivity;
-import com.fig.figfacerecognition.common.Constants;
 import com.fig.figfacerecognition.faceserver.CompareResult;
 import com.fig.figfacerecognition.faceserver.FaceServer;
 import com.fig.figfacerecognition.model.DrawInfo;
@@ -68,18 +65,6 @@ import io.reactivex.schedulers.Schedulers;
 public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalLayoutListener {
     private static final String TAG = "MainActivity";
 
-    /**
-     * 所需的所有权限信息
-     */
-    private static final String[] NEEDED_PERMISSIONS = new String[]{
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_PHONE_STATE
-
-    };
-    /**
-     * 管理密码
-     */
-    private static final String ADMIN_PWD = "";
     @BindView(R.id.texture_preview)
     TextureView previewView;
     @BindView(R.id.face_rect_view)
@@ -89,13 +74,20 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     @BindView(R.id.tvFaceNum)
     TextView mTvFaceNum;
     private AlertDialog mDialog = null;
-    private FaceEngine faceEngine;
+    private FaceEngine faceEngine = new FaceEngine();
     private CameraHelper cameraHelper;
     private FaceHelper faceHelper;
     private int afCode = -1;
     private ConcurrentHashMap<Integer, Integer> requestFeatureStatusMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Integer, Integer> livenessMap = new ConcurrentHashMap<>();
     private CompositeDisposable getFeatureDelayedDisposables = new CompositeDisposable();
+    /**
+     * 管理密码
+     */
+    private static final String ADMIN_PWD = "888888";
+    /**
+     * 最大检测数量
+     */
     private static final int MAX_DETECT_NUM = 10;
     /**
      * 当FR成功，活体未成功时，FR等待活体的时间
@@ -133,12 +125,11 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         // Activity启动后就锁定为启动时的方向
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
         initData();
-        //本地人脸库初始化
-        FaceServer.getInstance().init(this);
     }
 
     private void initData() {
-        activeEngine();
+        //本地人脸库初始化
+        FaceServer.getInstance().init(this);
         //在布局结束后才做初始化操作
         previewView.getViewTreeObserver().addOnGlobalLayoutListener(this);
     }
@@ -148,65 +139,12 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         previewView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         initEngine();
         initCamera();
-        int faceNum = FaceServer.getInstance().getFaceNumber(this);
-        mTvFaceNum.setText("人脸数：" + faceNum);
-    }
-
-    /**
-     * 激活引擎
-     */
-    public void activeEngine() {
-        Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-                int activeCode = faceEngine.activeOnline(MainActivity.this, Constants.APP_ID, Constants.SDK_KEY);
-                emitter.onNext(activeCode);
-            }
-        })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Integer>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(Integer activeCode) {
-                        if (activeCode == ErrorInfo.MOK) {
-                            ToastUtil.showToastShort(MainActivity.this, getString(R.string.active_success));
-                            //本地人脸库初始化
-                            FaceServer.getInstance().init(MainActivity.this);
-                        } else if (activeCode == ErrorInfo.MERR_ASF_ALREADY_ACTIVATED) {
-                            ToastUtil.showToastShort(MainActivity.this, getString(R.string.already_activated));
-                        } else {
-                            ToastUtil.showToastShort(MainActivity.this, getString(R.string.active_failed, activeCode));
-                        }
-                        ActiveFileInfo activeFileInfo = new ActiveFileInfo();
-                        int res = faceEngine.getActiveFileInfo(MainActivity.this, activeFileInfo);
-                        if (res == ErrorInfo.MOK) {
-                            Log.i(TAG, activeFileInfo.toString());
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
-
     }
 
     /**
      * 初始化引擎
      */
     private void initEngine() {
-        faceEngine = new FaceEngine();
         afCode = faceEngine.init(this, FaceEngine.ASF_DETECT_MODE_VIDEO, ConfigUtil.getFtOrient(this),
                 16, MAX_DETECT_NUM, FaceEngine.ASF_FACE_RECOGNITION | FaceEngine.ASF_FACE_DETECT | FaceEngine.ASF_LIVENESS);
         VersionInfo versionInfo = new VersionInfo();
@@ -243,8 +181,6 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
             public void onFaceFeatureInfoGet(@Nullable final FaceFeature faceFeature, final Integer requestId) {
                 //FR成功
                 if (faceFeature != null) {
-//                    Log.i(TAG, "onPreview: fr end = " + System.currentTimeMillis() + " trackId = " + requestId);
-
                     //不做活体检测的情况，直接搜索
                     if (!livenessDetect) {
                         searchFace(faceFeature, requestId);
@@ -267,7 +203,6 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                     else {
                         requestFeatureStatusMap.put(requestId, RequestFeatureStatus.NOT_ALIVE);
                     }
-
                 }
                 //FR 失败
                 else {
@@ -275,7 +210,6 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                 }
             }
         };
-
 
         CameraListener cameraListener = new CameraListener() {
             @Override
@@ -369,9 +303,7 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                 .create(new ObservableOnSubscribe<CompareResult>() {
                     @Override
                     public void subscribe(ObservableEmitter<CompareResult> emitter) {
-//                        Log.i(TAG, "subscribe: fr search start = " + System.currentTimeMillis() + " trackId = " + requestId);
                         CompareResult compareResult = FaceServer.getInstance().getTopOfFaceLib(frFace);
-//                        Log.i(TAG, "subscribe: fr search end = " + System.currentTimeMillis() + " trackId = " + requestId);
                         if (compareResult == null) {
                             emitter.onError(null);
                         } else {
@@ -427,27 +359,23 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     private void showPwdDialog() {
         final View textEntryView = LayoutInflater.from(this).inflate(R.layout.dialog_add_player, null);
         final EditText etPlayerName = textEntryView.findViewById(R.id.etPlayerName);
-        if (mDialog == null) {
-            mDialog = new AlertDialog.Builder(this)
-                    .setTitle("进入管理界面")
-                    .setView(textEntryView)
-                    .setNegativeButton("取消", null)
-                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            String pwd = etPlayerName.getText().toString().trim();
-                            if (TextUtils.equals(pwd, ADMIN_PWD)) {
-                                startActivity(new Intent(MainActivity.this, SettingActivity.class));
-                            } else {
-                                ToastUtil.showToastShort(MainActivity.this, "密码错误！");
-                            }
+        mDialog = new AlertDialog.Builder(this)
+                .setTitle("进入管理界面")
+                .setView(textEntryView)
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        String pwd = etPlayerName.getText().toString().trim();
+                        if (TextUtils.equals(pwd, ADMIN_PWD)) {
+                            startActivity(new Intent(MainActivity.this, SettingActivity.class));
+                        } else {
+                            ToastUtil.showToastShort(MainActivity.this, "密码错误！");
                         }
-                    })
-                    .setCancelable(false)
-                    .show();
-        } else if (!mDialog.isShowing()) {
-            mDialog.show();
-        }
+                    }
+                })
+                .setCancelable(false)
+                .show();
     }
 
     @Override
@@ -456,6 +384,8 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         if (cameraHelper != null) {
             cameraHelper.start();
         }
+        int faceNum = FaceServer.getInstance().getFaceNumber(this);
+        mTvFaceNum.setText("人脸数：" + faceNum);
     }
 
     @Override

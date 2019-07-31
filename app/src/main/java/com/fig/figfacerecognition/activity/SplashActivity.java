@@ -10,15 +10,36 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.WindowManager;
 
+import com.arcsoft.face.ActiveFileInfo;
+import com.arcsoft.face.ErrorInfo;
+import com.arcsoft.face.FaceEngine;
 import com.fig.figfacerecognition.MainActivity;
 import com.fig.figfacerecognition.R;
+import com.fig.figfacerecognition.common.Constants;
+import com.fig.figfacerecognition.util.ToastUtil;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class SplashActivity extends Activity {
+    private static final String TAG = "SplashActivity";
 
     private static final int CAMERA_PERMISSION_CODE = 10;
-    String[] NEED_PERMISSIONS = {Manifest.permission.CAMERA, Manifest.permission.READ_PHONE_STATE};
+    String[] NEED_PERMISSIONS = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+    };
+    private FaceEngine faceEngine = new FaceEngine();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +51,7 @@ public class SplashActivity extends Activity {
         } else {
             initTimer();
         }
+        activeEngine();
     }
 
     private void initTimer() {
@@ -82,5 +104,54 @@ public class SplashActivity extends Activity {
             }
         }
         return true;
+    }
+
+    /**
+     * 激活引擎
+     */
+    public void activeEngine() {
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                int activeCode = faceEngine.activeOnline(SplashActivity.this, Constants.APP_ID, Constants.SDK_KEY);
+                emitter.onNext(activeCode);
+            }
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Integer>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Integer activeCode) {
+                        if (activeCode == ErrorInfo.MOK) {
+                            ToastUtil.showToastShort(SplashActivity.this, getString(R.string.active_success));
+                        } else if (activeCode == ErrorInfo.MERR_ASF_ALREADY_ACTIVATED) {
+                            ToastUtil.showToastShort(SplashActivity.this, getString(R.string.already_activated));
+                        } else if (activeCode == ErrorInfo.MERR_ASF_SIGN_ERROR) {
+                            faceEngine.activeOnline(SplashActivity.this, Constants.APP_ID, Constants.SDK_KEY);
+                        } else {
+                            ToastUtil.showToastShort(SplashActivity.this, getString(R.string.active_failed, activeCode));
+                        }
+                        ActiveFileInfo activeFileInfo = new ActiveFileInfo();
+                        int res = faceEngine.getActiveFileInfo(SplashActivity.this, activeFileInfo);
+                        if (res == ErrorInfo.MOK) {
+                            Log.i(TAG, activeFileInfo.toString());
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 }

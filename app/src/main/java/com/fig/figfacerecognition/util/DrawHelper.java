@@ -186,15 +186,15 @@ public class DrawHelper {
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(faceRectThickness);
-        if (drawInfo.getLiveness() == LivenessInfo.NOT_ALIVE){
+        if (drawInfo.getLiveness() == LivenessInfo.NOT_ALIVE) {
             paint.setColor(Color.RED);
-        }else  if (drawInfo.getLiveness() == LivenessInfo.ALIVE){
+        } else if (drawInfo.getLiveness() == LivenessInfo.ALIVE) {
             paint.setColor(Color.GREEN);
-        }else {
+        } else {
             paint.setColor(color);
         }
         Path mPath = new Path();
-//        //左上
+        //左上
         Rect rect = drawInfo.getRect();
         mPath.moveTo(rect.left, rect.top + rect.height() / 4);
         mPath.lineTo(rect.left, rect.top);
@@ -213,9 +213,41 @@ public class DrawHelper {
         mPath.lineTo(rect.left, rect.bottom - rect.height() / 4);
         canvas.drawPath(mPath, paint);
 
-//        canvas.drawRect(rect,paint);
+        //画网格
+        Path mNetPath = new Path();
+        paint.setStrokeWidth(1);
+        paint.setAlpha(100);
+        int lines = 20;
+        for (int i = 0; i <= lines; i++) {
+            mNetPath.moveTo(rect.left, rect.top + rect.height() * i / lines);
+            mNetPath.lineTo(rect.right, rect.top + rect.height() * i / lines);
+
+            mNetPath.moveTo(rect.left + rect.width() * i / lines, rect.top);
+            mNetPath.lineTo(rect.left + rect.width() * i / lines, rect.bottom);
+        }
+        canvas.drawPath(mNetPath, paint);
+
+        //画线，左
+        Path mLinePath = new Path();
+        paint.setStrokeWidth(6);
+        paint.setAlpha(255);
+        mLinePath.moveTo(rect.left - rect.width() / 8, rect.height() / 2);
+        mLinePath.lineTo(rect.left + rect.width() / 8, rect.height() / 2);
+
+        mLinePath.moveTo(rect.right - rect.width() / 8, rect.height() / 2);
+        mLinePath.lineTo(rect.right + rect.width() / 8, rect.height() / 2);
+
+        mLinePath.moveTo(rect.width() / 2, rect.top - rect.height() / 8);
+        mLinePath.lineTo(rect.width() / 2, rect.top + rect.height() / 8);
+
+        mLinePath.moveTo(rect.width() / 2, rect.bottom - rect.height() / 8);
+        mLinePath.lineTo(rect.width() / 2, rect.bottom + rect.height() / 8);
+        canvas.drawPath(mLinePath, paint);
+
 
         if (drawInfo.getName() == null) {
+            paint.setAlpha(255);
+            paint.setStrokeWidth(2);
             paint.setStyle(Paint.Style.FILL_AND_STROKE);
             paint.setTextSize(rect.width() / 8);
 

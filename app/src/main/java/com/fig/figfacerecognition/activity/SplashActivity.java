@@ -155,7 +155,7 @@ public class SplashActivity extends Activity {
                         if (activeCode == ErrorInfo.MOK) {
                             ToastUtil.showToastShort(SplashActivity.this, getString(R.string.active_success));
                         } else if (activeCode == ErrorInfo.MERR_ASF_ALREADY_ACTIVATED) {
-                            ToastUtil.showToastShort(SplashActivity.this, getString(R.string.already_activated));
+//                            ToastUtil.showToastShort(SplashActivity.this, getString(R.string.already_activated));
                         } else if (activeCode == ErrorInfo.MERR_ASF_SIGN_ERROR) {
                             faceEngine.activeOnline(SplashActivity.this, Constants.APP_ID, Constants.SDK_KEY);
                         } else {

@@ -227,27 +227,28 @@ public class DrawHelper {
         }
         canvas.drawPath(mNetPath, paint);
 
-        //画线，左
+        //画上下左右4条直线
         Path mLinePath = new Path();
-        paint.setStrokeWidth(6);
-        paint.setAlpha(255);
-        mLinePath.moveTo(rect.left - rect.width() / 8, rect.height() / 2);
-        mLinePath.lineTo(rect.left + rect.width() / 8, rect.height() / 2);
-
-        mLinePath.moveTo(rect.right - rect.width() / 8, rect.height() / 2);
-        mLinePath.lineTo(rect.right + rect.width() / 8, rect.height() / 2);
-
-        mLinePath.moveTo(rect.width() / 2, rect.top - rect.height() / 8);
-        mLinePath.lineTo(rect.width() / 2, rect.top + rect.height() / 8);
-
-        mLinePath.moveTo(rect.width() / 2, rect.bottom - rect.height() / 8);
-        mLinePath.lineTo(rect.width() / 2, rect.bottom + rect.height() / 8);
+        paint.setStrokeWidth(4);
+        paint.setAlpha(160);
+        //left
+        mLinePath.moveTo(rect.left - rect.width() / 8, rect.top + rect.height() / 2);
+        mLinePath.lineTo(rect.left + rect.width() / 8, rect.top + rect.height() / 2);
+        //right
+        mLinePath.moveTo(rect.right - rect.width() / 8, rect.top + rect.height() / 2);
+        mLinePath.lineTo(rect.right + rect.width() / 8, rect.top + rect.height() / 2);
+        //top
+        mLinePath.moveTo(rect.left + rect.width() / 2, rect.top - rect.height() / 8);
+        mLinePath.lineTo(rect.left + rect.width() / 2, rect.top + rect.height() / 8);
+        //bottom
+        mLinePath.moveTo(rect.left + rect.width() / 2, rect.bottom - rect.height() / 8);
+        mLinePath.lineTo(rect.left + rect.width() / 2, rect.bottom + rect.height() / 8);
         canvas.drawPath(mLinePath, paint);
 
 
+        paint.setStrokeWidth(2);
+        paint.setAlpha(255);
         if (drawInfo.getName() == null) {
-            paint.setAlpha(255);
-            paint.setStrokeWidth(2);
             paint.setStyle(Paint.Style.FILL_AND_STROKE);
             paint.setTextSize(rect.width() / 8);
 

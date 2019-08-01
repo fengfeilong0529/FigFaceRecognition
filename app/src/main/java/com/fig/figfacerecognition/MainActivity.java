@@ -104,7 +104,7 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     /**
      * 识别阈值
      */
-    private static final float SIMILAR_THRESHOLD = 0.8F;
+    private static final float SIMILAR_THRESHOLD = 0.6F;
     public static Camera.Size previewSize;
     private DrawHelper drawHelper;
 

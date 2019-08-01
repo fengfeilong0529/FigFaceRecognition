@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,6 +38,7 @@ import com.fig.figfacerecognition.model.DrawInfo;
 import com.fig.figfacerecognition.model.FacePreviewInfo;
 import com.fig.figfacerecognition.util.ConfigUtil;
 import com.fig.figfacerecognition.util.DrawHelper;
+import com.fig.figfacerecognition.util.RecogToastUtil;
 import com.fig.figfacerecognition.util.ToastUtil;
 import com.fig.figfacerecognition.util.camera.CameraHelper;
 import com.fig.figfacerecognition.util.camera.CameraListener;
@@ -62,17 +65,17 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
-public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalLayoutListener {
+public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalLayoutListener, CompoundButton.OnCheckedChangeListener {
     private static final String TAG = "MainActivity";
 
     @BindView(R.id.texture_preview)
     TextureView previewView;
     @BindView(R.id.face_rect_view)
     FaceRectView faceRectView;
-    @BindView(R.id.view_manager)
-    View mViewManager;
     @BindView(R.id.tvFaceNum)
     TextView mTvFaceNum;
+    @BindView(R.id.swLiveness)
+    SwitchCompat mSwLiveness;
     private AlertDialog mDialog = null;
     private FaceEngine faceEngine = new FaceEngine();
     private CameraHelper cameraHelper;
@@ -96,7 +99,7 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     /**
      * 活体检测的开关
      */
-    private boolean livenessDetect = false;
+    private boolean livenessDetect;
     /**
      * 优先打开的摄像头，本界面主要用于单目RGB摄像头设备，因此默认打开前置
      */
@@ -134,6 +137,8 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         FaceServer.getInstance().init(this);
         //在布局结束后才做初始化操作
         previewView.getViewTreeObserver().addOnGlobalLayoutListener(this);
+        mSwLiveness.setOnCheckedChangeListener(this);
+        livenessDetect = mSwLiveness.isChecked();
     }
 
     @Override
@@ -331,7 +336,7 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                         }
 
                         if (compareResult.getSimilar() > SIMILAR_THRESHOLD) {
-                            ToastUtil.showToastShort(MainActivity.this, "识别成功\n" + compareResult.getUserName());
+                            RecogToastUtil.show(compareResult.getUserName());
                             requestFeatureStatusMap.put(requestId, RequestFeatureStatus.SUCCEED);
                             faceHelper.addName(requestId, compareResult.getUserName());
                         } else {
@@ -352,8 +357,7 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
                 });
     }
 
-
-    @OnClick(R.id.view_manager)
+    @OnClick(R.id.tvFaceNum)
     public void onViewClicked() {
         showPwdDialog();
     }
@@ -417,4 +421,8 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         super.onDestroy();
     }
 
+    @Override
+    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+        livenessDetect = b;
+    }
 }

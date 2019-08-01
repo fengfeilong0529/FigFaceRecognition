@@ -21,12 +21,13 @@
             android:id="@+id/face_rect_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:visibility="gone"
-            android:src="@mipmap/ic_circle1"/>
+            android:src="@mipmap/ic_circle1"
+            android:visibility="gone"/>
 
     </FrameLayout>
 
@@ -35,14 +36,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
-        android:textColor="#fff"
-        android:layout_margin="10dp"/>
+        android:paddingRight="10dp"
+        android:paddingLeft="40dp"
+        android:paddingBottom="10dp"
+        android:paddingTop="40dp"
+        android:text="人脸数： "
+        android:textColor="#fff"/>
 
-    <View
-        android:id="@+id/view_manager"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_gravity="bottom"
-        android:background="#00000000"/>
+    <android.support.v7.widget.SwitchCompat
+        android:id="@+id/swLiveness"
+        android:layout_gravity="bottom|left"
+        android:text="活体检测"
+        android:padding="10dp"
+        android:gravity="center"
+        android:checked="true"
+        android:textColor="#fff"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
 </FrameLayout>

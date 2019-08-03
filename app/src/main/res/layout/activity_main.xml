@@ -8,8 +8,8 @@
     tools:context=".MainActivity">
 
     <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="600dp"
+        android:layout_height="450dp"
         android:layout_gravity="center_horizontal">
 
         <TextureView
@@ -41,7 +41,7 @@
         android:paddingBottom="10dp"
         android:paddingTop="40dp"
         android:text="人脸数： "
-        android:textColor="#fff"/>
+        android:textColor="#000"/>
 
     <android.support.v7.widget.SwitchCompat
         android:id="@+id/swLiveness"
@@ -50,8 +50,17 @@
         android:padding="10dp"
         android:gravity="center"
         android:checked="true"
-        android:textColor="#fff"
+        android:textColor="#000"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
+
+    <ImageView
+        android:id="@+id/ivSnapshot"
+        android:layout_width="200dp"
+        android:layout_height="150dp"
+        android:visibility="gone"
+        android:layout_gravity="center|bottom"
+        android:layout_marginBottom="60dp"
+        android:src="@mipmap/ic_circle1"/>
 
 </FrameLayout>

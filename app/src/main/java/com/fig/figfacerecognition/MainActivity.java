@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.hardware.Camera;
 import android.os.Build;
@@ -21,6 +22,7 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +38,7 @@ import com.fig.figfacerecognition.faceserver.CompareResult;
 import com.fig.figfacerecognition.faceserver.FaceServer;
 import com.fig.figfacerecognition.model.DrawInfo;
 import com.fig.figfacerecognition.model.FacePreviewInfo;
+import com.fig.figfacerecognition.util.BitmapUtil;
 import com.fig.figfacerecognition.util.ConfigUtil;
 import com.fig.figfacerecognition.util.DrawHelper;
 import com.fig.figfacerecognition.util.RecogToastUtil;
@@ -76,6 +79,8 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     TextView mTvFaceNum;
     @BindView(R.id.swLiveness)
     SwitchCompat mSwLiveness;
+    @BindView(R.id.ivSnapshot)
+    ImageView mIvSnapshot;
     private AlertDialog mDialog = null;
     private FaceEngine faceEngine = new FaceEngine();
     private CameraHelper cameraHelper;
@@ -110,6 +115,7 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     private static final float SIMILAR_THRESHOLD = 0.6F;
     public static Camera.Size previewSize;
     private DrawHelper drawHelper;
+    private byte[] mShapShotData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,7 +158,10 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
      * 初始化引擎
      */
     private void initEngine() {
-        afCode = faceEngine.init(this, FaceEngine.ASF_DETECT_MODE_VIDEO, ConfigUtil.getFtOrient(this),
+//        int ftOrient = ConfigUtil.getFtOrient(this);
+//        int ftOrient = FaceEngine.ASF_OP_0_HIGHER_EXT;//视频模式全方向人脸检测
+        int ftOrient = FaceEngine.ASF_OP_0_ONLY;//视频模式人脸检测0度
+        afCode = faceEngine.init(this, FaceEngine.ASF_DETECT_MODE_VIDEO, ftOrient,
                 16, MAX_DETECT_NUM, FaceEngine.ASF_FACE_RECOGNITION | FaceEngine.ASF_FACE_DETECT | FaceEngine.ASF_LIVENESS);
         VersionInfo versionInfo = new VersionInfo();
         faceEngine.getVersion(versionInfo);
@@ -235,7 +244,8 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
             }
 
             @Override
-            public void onPreview(final byte[] nv21, Camera camera) {
+            public void onPreview(byte[] nv21, Camera camera) {
+                mShapShotData = nv21;
                 if (faceRectView != null) {
                     faceRectView.clearFaceInfo();
                 }
@@ -293,6 +303,24 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
         cameraHelper.start();
     }
 
+    /**
+     * 抓拍
+     */
+    private void takePicture() {
+        try {
+            if (mShapShotData != null) {
+                Bitmap bitmap = BitmapUtil.convertYuv2Bitmap(mShapShotData, 1920, 1280);
+                if (true) {
+                    bitmap = BitmapUtil.rotateBitmap(bitmap, 360);
+                    bitmap = BitmapUtil.horMirrorBitmap(bitmap);
+                }
+                mIvSnapshot.setImageBitmap(bitmap);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void drawPreviewInfo(List<FacePreviewInfo> facePreviewInfoList) {
         List<DrawInfo> drawInfoList = new ArrayList<>();
         for (int i = 0; i < facePreviewInfoList.size(); i++) {
@@ -306,18 +334,17 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     }
 
     private void searchFace(final FaceFeature frFace, final Integer requestId) {
-        Observable
-                .create(new ObservableOnSubscribe<CompareResult>() {
-                    @Override
-                    public void subscribe(ObservableEmitter<CompareResult> emitter) {
-                        CompareResult compareResult = FaceServer.getInstance().getTopOfFaceLib(frFace);
-                        if (compareResult == null) {
-                            emitter.onError(null);
-                        } else {
-                            emitter.onNext(compareResult);
-                        }
-                    }
-                })
+        Observable.create(new ObservableOnSubscribe<CompareResult>() {
+            @Override
+            public void subscribe(ObservableEmitter<CompareResult> emitter) {
+                CompareResult compareResult = FaceServer.getInstance().getTopOfFaceLib(frFace);
+                if (compareResult == null) {
+                    emitter.onError(null);
+                } else {
+                    emitter.onNext(compareResult);
+                }
+            }
+        })
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<CompareResult>() {
@@ -360,6 +387,7 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
     @OnClick(R.id.tvFaceNum)
     public void onViewClicked() {
         showPwdDialog();
+//        takePicture();
     }
 
     private void showPwdDialog() {

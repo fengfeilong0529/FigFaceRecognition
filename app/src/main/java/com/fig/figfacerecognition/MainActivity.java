@@ -152,7 +152,8 @@ public class MainActivity extends Activity implements ViewTreeObserver.OnGlobalL
      * 初始化引擎
      */
     private void initEngine() {
-        afCode = faceEngine.init(this, FaceEngine.ASF_DETECT_MODE_VIDEO, ConfigUtil.getFtOrient(this),
+        int ftOrient = FaceEngine.ASF_OP_0_HIGHER_EXT;//视频模式全方向人脸检测
+        afCode = faceEngine.init(this, FaceEngine.ASF_DETECT_MODE_VIDEO, ftOrient,
                 16, MAX_DETECT_NUM, FaceEngine.ASF_FACE_RECOGNITION | FaceEngine.ASF_FACE_DETECT | FaceEngine.ASF_LIVENESS);
         VersionInfo versionInfo = new VersionInfo();
         faceEngine.getVersion(versionInfo);
